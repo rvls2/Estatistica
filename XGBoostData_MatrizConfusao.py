@@ -22,9 +22,11 @@ populacao['ap_hi'] = populacao['ap_hi'].clip(upper=200)
 accuracies = []
 f1_scores = []
 
-colunas = ['id','age','gender','height','weight','ap_hi','ap_lo','cholesterol','gluc','smoke','alco','active','cardio','age_years','bmi','bp_category','bp_category_encoded']
+colunas = ['id','age','gender','height',
+           'weight','ap_hi','ap_lo','cholesterol',
+           'gluc','smoke','alco','active','cardio',
+           'age_years','bmi','bp_category','bp_category_encoded']
 
-# Definir colunas (ajustar conforme seu dataset)
 binary_cols = ['gender', 'smoke', 'alco', 'active']
 
 categorical_cols = ['cholesterol', 'gluc']
@@ -32,9 +34,9 @@ categorical_cols = ['cholesterol', 'gluc']
 continuous_cols = ['ap_hi', 'age_years', 'bmi']
 
 # Separar features e target
-# ATENÇÃO: Verifique o nome correto da coluna target no seu CSV
-X = populacao.drop(['cardio', 'bp_category', 'bp_category_encoded', 'ap_lo', 'height','weight', 'age', 'id'], axis=1)  # Ajuste o nome da coluna target se necessário
-y = populacao['cardio']  # Ajuste o nome da coluna target se necessário
+X = populacao.drop(['cardio', 'bp_category', 'bp_category_encoded',
+                    'ap_lo', 'height','weight', 'age', 'id'], axis=1)  
+y = populacao['cardio']  
 
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=25)
 
@@ -42,14 +44,14 @@ count_neg = (y_train == 0).sum()
 count_pos = (y_train == 1).sum()
 scale_pos_weight_value = count_neg / count_pos
 
-# 2. Inicializar o XGBoost
+# Inicializar o XGBoost
 xgb_model = xgb.XGBClassifier(
     objective='binary:logistic',     # Função de perda para classificação binária
     n_estimators=150,                # Número de árvores
     learning_rate=0.1,               # Taxa de aprendizado (ajusta a contribuição de cada árvore)
     max_depth=5,                     # Profundidade máxima das árvores
-    scale_pos_weight=scale_pos_weight_value, # <--- O PONTO CRÍTICO PARA O RECALL
-    random_state=42,      # Para suprimir avisos de versões futuras
+    scale_pos_weight=scale_pos_weight_value, # RECALL
+    random_state=42,      
     eval_metric='logloss'
 )
 
@@ -59,7 +61,7 @@ kf = StratifiedKFold(n_splits=5, shuffle=True, random_state=25)
 
 # MUDANÇA 1: Criar lista para guardar PROBABILIDADES, não apenas classes
 y_real_total = []
-y_proba_total = [] # Vamos guardar números como 0.45, 0.89, etc.
+y_proba_total = [] 
 
 fold = 1
 for train_index, val_index in kf.split(X, y):
@@ -71,7 +73,6 @@ for train_index, val_index in kf.split(X, y):
     model_fold.fit(X_fold_train, y_fold_train)
     
     # MUDANÇA 2: Usar predict_proba em vez de predict
-    # [:, 1] pega apenas a probabilidade da classe 1 (Doente)
     proba_fold = model_fold.predict_proba(X_fold_val)[:, 1]
     y_fold_pred = model_fold.predict(X_fold_val)
     
@@ -91,13 +92,11 @@ for train_index, val_index in kf.split(X, y):
 y_real_total = np.array(y_real_total)
 y_proba_total = np.array(y_proba_total)
 
-# --- APLICANDO OS LIMIARES AGORA CORRETAMENTE ---
-
-# Limiar Padrão (0.50) - Equivalente ao .predict() original
+# Limiar Padrão (0.50)
 threshold_padrao = 0.50
 y_pred_padrao = (y_proba_total >= threshold_padrao).astype(int)
 
-# Limiar Ajustado (0.35) - Agora fará diferença!
+# Limiar Ajustado (0.35)
 threshold_ajustado = 0.35
 y_pred_ajustado = (y_proba_total >= threshold_ajustado).astype(int)
 

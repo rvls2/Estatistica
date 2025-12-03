@@ -12,7 +12,7 @@ from sklearn.metrics import accuracy_score, classification_report, confusion_mat
 from sklearn.utils import compute_class_weight
 
 class MixedNaiveBayes(BaseEstimator, ClassifierMixin):
-    def __init__(self, binary_cols, categorical_cols, continuous_cols):
+    def __init__(self, binary_cols, categorical_cols, continuous_Scols):
         self.binary_cols = binary_cols
         self.categorical_cols = categorical_cols
         self.continuous_cols = continuous_cols
@@ -51,7 +51,10 @@ populacao['ap_hi'] = populacao['ap_hi'].clip(upper=200)
 
 
 
-colunas = ['id','age','gender','height','weight','ap_hi','ap_lo','cholesterol','gluc','smoke','alco','active','cardio','age_years','bmi','bp_category','bp_category_encoded']
+colunas = ['id','age','gender','height',
+           'weight','ap_hi','ap_lo','cholesterol',
+           'gluc','smoke','alco','active','cardio',
+           'age_years','bmi','bp_category','bp_category_encoded']
 
 # Definir colunas (ajustar conforme seu dataset)
 binary_cols = ['gender', 'smoke', 'alco', 'active']
@@ -61,9 +64,9 @@ categorical_cols = ['cholesterol', 'gluc']
 continuous_cols = ['ap_hi', 'age_years', 'bmi']
 
 # Separar features e target
-# ATENÇÃO: Verifique o nome correto da coluna target no seu CSV
-X = populacao.drop(['cardio', 'bp_category', 'bp_category_encoded', 'ap_lo', 'height','weight', 'age', 'id'], axis=1)  # Ajuste o nome da coluna target se necessário
-y = populacao['cardio']  # Ajuste o nome da coluna target se necessário
+X = populacao.drop(['cardio', 'bp_category', 'bp_category_encoded', 
+                    'ap_lo', 'height','weight', 'age', 'id'], axis=1) 
+y = populacao['cardio'] 
 
 # Dividir os dados
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=25)
@@ -118,15 +121,14 @@ print("\nModelo GaussianNB (features continuas):")
 print(f"Classes: {model.gn.classes_}")
 print(f"Medias por classe: {model.gn.theta_.shape}")
 
-# Cross-validation opcional
+# Cross-validation
 from sklearn.model_selection import cross_val_score
 cv_scores = cross_val_score(model, X_train_res, y_train_res, cv=5)
 print(f"\nValidação Cruzada (5 folds): {cv_scores}")
 print(f"Media da validação cruzada: {cv_scores.mean():.4f} (+/- {cv_scores.std() * 2:.4f})")
 
-# Testar com novos dados (exemplo)
 print("\n=== TESTE COM NOVOS DADOS ===")
-# Criar um exemplo de nova amostra (ajuste os valores conforme suas features)
+
 nova_amostra = pd.DataFrame({
     'Gender': [1],
     'Family Heart Disease': [0],

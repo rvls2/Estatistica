@@ -54,9 +54,11 @@ populacao['ap_hi'] = populacao['ap_hi'].clip(upper=200)
 
 
 
-colunas = ['id','age','gender','height','weight','ap_hi','ap_lo','cholesterol','gluc','smoke','alco','active','cardio','age_years','bmi','bp_category','bp_category_encoded']
+colunas = ['id','age','gender','height','weight',
+           'ap_hi','ap_lo','cholesterol','gluc','smoke',
+           'alco','active','cardio','age_years','bmi',
+           'bp_category','bp_category_encoded']
 
-# Definir colunas (ajustar conforme seu dataset)
 binary_cols = ['gender', 'smoke', 'alco', 'active']
 
 categorical_cols = ['cholesterol', 'gluc']
@@ -64,9 +66,8 @@ categorical_cols = ['cholesterol', 'gluc']
 continuous_cols = ['ap_hi', 'age_years', 'bmi']
 
 # Separar features e target
-# ATENÇÃO: Verifique o nome correto da coluna target no seu CSV
-X = populacao.drop(['cardio', 'bp_category', 'bp_category_encoded', 'ap_lo', 'height','weight', 'age', 'id'], axis=1)  # Ajuste o nome da coluna target se necessário
-y = populacao['cardio']  # Ajuste o nome da coluna target se necessário
+X = populacao.drop(['cardio', 'bp_category', 'bp_category_encoded', 'ap_lo', 'height','weight', 'age', 'id'], axis=1)  
+y = populacao['cardio']  
 
 # Dividir os dados
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=25)
@@ -95,21 +96,16 @@ y_pred_proba = model.predict_proba(X_test)
 
 print("=== CALCULANDO IMPORTANCIA DAS FEATURES (PERMUTATION) ===")
 
-# 1. É necessário ter o modelo treinado
-# (Seu código já treinou o 'model' na linha: model.fit(X_train_res, y_train_res))
-
-# 2. Calcular a importância usando os dados de TESTE (X_test, y_test)
-# n_repeats=10: Ele vai embaralhar cada coluna 10 vezes para ter certeza estatística
 result = permutation_importance(
     model, 
     X_test, 
     y_test, 
     n_repeats=10, 
     random_state=42, 
-    n_jobs=-1  # Usa todos os núcleos do PC para ir rápido
+    n_jobs=-1  
 )
 
-# 3. Organizar os dados em um DataFrame
+# Organizar os dados em um DataFrame
 feature_names = X_test.columns
 importances = pd.DataFrame({
     'Feature': feature_names,
@@ -117,18 +113,18 @@ importances = pd.DataFrame({
     'Desvio_Padrao': result.importances_std
 })
 
-# 4. Ordenar do mais importante para o menos importante
+# Ordenar do mais importante para o menos importante
 importances = importances.sort_values(by='Importancia_Media', ascending=False)
 
-# 5. Plotar o Gráfico de Barras
+# Plotar o Gráfico de Barras
 plt.figure(figsize=(10, 8))
 sns.barplot(
     x='Importancia_Media', 
     y='Feature', 
-    hue='Feature',      # <--- ADICIONADO: A cor segue a Feature
+    hue='Feature',      # A cor segue a Feature
     data=importances, 
     palette='viridis',
-    legend=False        # <--- ADICIONADO: Remove a legenda duplicada
+    legend=False        # Remove a legenda duplicada
 )
 
 plt.title('Importância das Features - Naive Bayes (Queda na Acurácia)', fontsize=14)

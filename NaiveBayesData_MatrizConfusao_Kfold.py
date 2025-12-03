@@ -59,9 +59,11 @@ f1_scores = []
 
 
 
-colunas = ['id','age','gender','height','weight','ap_hi','ap_lo','cholesterol','gluc','smoke','alco','active','cardio','age_years','bmi','bp_category','bp_category_encoded']
+colunas = ['id','age','gender','height','weight',
+           'ap_hi','ap_lo','cholesterol','gluc',
+           'smoke','alco','active','cardio','age_years',
+           'bmi','bp_category','bp_category_encoded']
 
-# Definir colunas (ajustar conforme seu dataset)
 binary_cols = ['gender', 'smoke', 'alco', 'active']
 
 categorical_cols = ['cholesterol', 'gluc']
@@ -69,9 +71,8 @@ categorical_cols = ['cholesterol', 'gluc']
 continuous_cols = ['ap_hi', 'age_years', 'bmi']
 
 # Separar features e target
-# ATENÇÃO: Verifique o nome correto da coluna target no seu CSV
-X = populacao.drop(['cardio', 'bp_category', 'bp_category_encoded', 'ap_lo', 'height','weight', 'age', 'id'], axis=1)  # Ajuste o nome da coluna target se necessário
-y = populacao['cardio']  # Ajuste o nome da coluna target se necessário
+X = populacao.drop(['cardio', 'bp_category', 'bp_category_encoded', 'ap_lo', 'height','weight', 'age', 'id'], axis=1)
+y = populacao['cardio']  
 
 # Dividir os dados
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state= 5)
@@ -80,9 +81,8 @@ print("\n=== INICIANDO VALIDACAO CRUZADA (K-FOLD) COM SMOTE - NAIVE BAYES ===")
 
 kf = StratifiedKFold(n_splits=5, shuffle=True, random_state=25)
 
-# MUDANÇA 1: Criar lista para guardar PROBABILIDADES, não apenas classes
 y_real_total = []
-y_proba_total = [] # Vamos guardar números como 0.45, 0.89, etc.
+y_proba_total = []
 
 fold = 1
 for train_index, val_index in kf.split(X, y):
@@ -98,7 +98,6 @@ for train_index, val_index in kf.split(X, y):
     model_fold.fit(X_fold_train_res, y_fold_train_res)
     
     # MUDANÇA 2: Usar predict_proba em vez de predict
-    # [:, 1] pega apenas a probabilidade da classe 1 (Doente)
     proba_fold = model_fold.predict_proba(X_fold_val)[:, 1]
     y_fold_pred = model_fold.predict(X_fold_val)
     
@@ -118,13 +117,11 @@ for train_index, val_index in kf.split(X, y):
 y_real_total = np.array(y_real_total)
 y_proba_total = np.array(y_proba_total)
 
-# --- APLICANDO OS LIMIARES AGORA CORRETAMENTE ---
-
-# Limiar Padrão (0.50) - Equivalente ao .predict() original
+# Limiar Padrão (0.50) 
 threshold_padrao = 0.50
 y_pred_padrao = (y_proba_total >= threshold_padrao).astype(int)
 
-# Limiar Ajustado (0.35) - Agora fará diferença!
+# Limiar Ajustado (0.35) 
 threshold_ajustado = 0.35
 y_pred_ajustado = (y_proba_total >= threshold_ajustado).astype(int)
 
